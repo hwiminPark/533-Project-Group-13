@@ -1,5 +1,4 @@
 # 533-Project-Group-13
-# This line was added by SageYang
 
 ## 01 Package Structure
 
@@ -23,3 +22,4 @@ retire_plan/
         analysis.py
 
 demo_runner.py             # Demo script entry point (placeholder for now)
+
