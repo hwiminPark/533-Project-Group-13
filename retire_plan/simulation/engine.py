@@ -1,68 +1,134 @@
-"""
-Simulation engine for the retire_plan package.
+from typing import List, Dict, Any
+from ..accounts import PersonProfile, TaxCalculator
+from ..strategies.policies import Strategy
+from .metrics import calculate_shortfall_years, project_tax_efficiency
 
-Defines:
-- StrategyFn type
-- run_simulation() main function
-
-Implementation is intentionally left to Student B.
-"""
-
-from __future__ import annotations
-
-from typing import Any, Callable, Dict, List
-
-from retire_plan.accounts import PersonProfile
-from .tax_system import TaxSystem
-
-# Strategy function type:
-# input: state dict (current year info)
-# output: plan dict with withdrawals by account
-StrategyFn = Callable[[Dict[str, Any]], Dict[str, float]]
-
-
-def run_simulation(
-    profile: PersonProfile,
-    tax_system: TaxSystem,
-    strategy_fn: StrategyFn,
-    target_net_cash: float,
-) -> List[Dict[str, Any]]:
-    """Run year-by-year retirement simulation.
-
-    Parameters
-    ----------
-    profile : PersonProfile
-        Person profile with age range, accounts, and CPP/OAS.
-    tax_system : TaxSystem
-        Tax system used to compute annual tax.
-    strategy_fn : StrategyFn
-        Withdrawal strategy function, operating on a state dict and
-        returning a plan dict with keys:
-        - 'tax_deferred'
-        - 'tax_free'
-        - 'taxable'
-    target_net_cash : float
-        Desired annual after-tax spending.
-
-    Returns
-    -------
-    List[Dict[str, Any]]
-        A list of dicts, one per year. Each record should include at least:
-        - 'age'
-        - 'gross_income'
-        - 'taxable_income'
-        - 'tax_paid'
-        - 'net_cash_flow'
-        - 'end_balances' (dict with three account balances)
-
-    Notes
-    -----
-    Student B: please implement the year-by-year loop here. This function
-    should:
-    - build the state dict for each year
-    - call strategy_fn(state) to get withdrawals
-    - apply growth, benefits, and tax
-    - append annual results to the list
+class Simulator:
     """
-    raise NotImplementedError("run_simulation() is not implemented yet.")
+    Core simulation engine for retirement optimization.
+    Composes a PersonProfile, TaxCalculator, and contribution/withdrawal strategies
+    to run full lifecycle simulations.
+    """
 
+    def __init__(self, profile: PersonProfile, tax_calc: TaxCalculator,
+                 contrib_strategy: Strategy, withdraw_strategy: Strategy):
+        """
+        Initialize the simulator with profile, tax calculator, and strategies.
+        Sets up empty histories for tracking net worth and taxes over time.
+        """
+        self.profile = profile
+        self.tax_calc = tax_calc
+        self.contrib_strategy = contrib_strategy
+        self.withdraw_strategy = withdraw_strategy
+        self.net_worth_history: List[float] = []
+        self.tax_history: List[float] = []
+
+    def simulate_accumulation_phase(self, retirement_age: int, annual_savings: float,
+                                    return_rates: List[float]) -> None:
+        """
+        Simulate pre-retirement accumulation: Update income history, apply contributions
+        up to room limits, grow accounts with returns, and age the profile.
+        Loops from current age to retirement_age - 1.
+        """
+        current_age = self.profile.age
+        for year in range(retirement_age - current_age):
+            # Add current income to history for RRSP room calculation
+            self.profile.add_prior_income(self.profile.income)
+            
+            # Get annual contributions via strategy
+            contribs = self.contrib_strategy.get_annual_actions(year, self.profile, annual_savings)
+            for acc, amt in contribs.items():
+                room = acc.update_room(self.profile.prior_income_history[-1])
+                acc.contribute_up_to_room(amt, room)
+            
+            # Apply returns to all accounts
+            for acc in self.profile.accounts:
+                acc.apply_return(return_rates[year])
+            
+            # Age the profile
+            self.profile.update_ages(1)
+
+    def simulate_end_of_life_net_worth(self, end_age: int, return_rates: List[float]) -> Dict[str, Any]:
+        """
+        Simulate post-retirement: Apply withdrawals to meet spending target,
+        calculate taxes, apply returns, and track net worth/taxes.
+        Loops from current age to end_age - 1; returns summary dict.
+        """
+        current_age = self.profile.age
+        for year in range(end_age - current_age):
+            # Get annual withdrawals via strategy (available = spending_target)
+            withdrawals = self.withdraw_strategy.get_annual_actions(
+                year, self.profile, self.profile.spending_target
+            )
+            total_withdrawn = 0
+            for acc, amt in withdrawals.items():
+                withdrawn = acc.withdraw(amt)
+                total_withdrawn += withdrawn
+            
+            # Calculate taxes on withdrawals
+            gross = total_withdrawn
+            deductions = {'rrsp': 0}  # Placeholder; could track unused
+            taxable = self.tax_calc.calc_taxable_income(gross, deductions)
+            net_income = self.tax_calc.calc_net_income(taxable)
+            tax_paid = gross - net_income
+            self.tax_history.append(tax_paid)
+            
+            # Apply returns after withdrawals
+            for acc in self.profile.accounts:
+                acc.apply_return(return_rates[year])
+            
+            # Track net worth
+            nw = self.profile.get_total_net_worth()
+            self.net_worth_history.append(nw)
+            
+            # Age the profile
+            self.profile.update_ages(1)
+        
+        # Compute integrated metrics
+        shortfalls = calculate_shortfall_years(self.net_worth_history, self.profile.spending_target * 25)  # 25x rule target
+        tax_eff = project_tax_efficiency(self.tax_history, sum(self.net_worth_history) / len(self.net_worth_history))  # Avg NW as proxy
+        
+        return {
+            'final_nw': self.net_worth_history[-1] if self.net_worth_history else 0,
+            'total_taxes': sum(self.tax_history),
+            'shortfall_years': shortfalls,
+            'tax_efficiency': tax_eff
+        }
+    
+    def run_full_lifecycle(self, end_age: int, annual_savings: float, return_rates: List[float]) -> Dict[str, Any]:
+        """
+        Run complete lifecycle: Accumulation phase followed by decumulation.
+        Resets histories before starting; returns end-of-life summary.
+        """
+        self.net_worth_history = []
+        self.tax_history = []
+        retirement_age = self.profile.retirement_age
+        
+        self.simulate_accumulation_phase(retirement_age, annual_savings, return_rates)
+        return self.simulate_end_of_life_net_worth(end_age, return_rates)
+    
+    def optimize_strategies(self, contrib_strats: List[Strategy], withdraw_strats: List[Strategy],
+                           params: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Optimize by running full lifecycles for all contrib/withdraw strategy combos.
+        Ranks results by total_taxes (lowest first); uses params like end_age, annual_savings, return_rates.
+        """
+        results = []
+        for c_strat in contrib_strats:
+            for w_strat in withdraw_strats:
+                # Create temporary simulator for each combo
+                temp_profile = PersonProfile(
+                    self.profile.age, self.profile.province, self.profile.income,
+                    self.profile.retirement_age, self.profile.spending_target
+                )
+                for acc in self.profile.accounts:
+                    temp_profile.add_account(type(acc)(acc.balance))
+                temp_sim = Simulator(temp_profile, self.tax_calc, c_strat, w_strat)
+                outcome = temp_sim.run_full_lifecycle(**params)
+                results.append({
+                    'contrib_strategy': c_strat.name,
+                    'withdraw_strategy': w_strat.name,
+                    **outcome
+                })
+        # Sort by total_taxes ascending
+        return sorted(results, key=lambda x: x['total_taxes'])
