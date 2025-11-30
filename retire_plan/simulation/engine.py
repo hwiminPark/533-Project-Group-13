@@ -94,3 +94,15 @@ class Simulator:
             'shortfall_years': shortfalls,
             'tax_efficiency': tax_eff
         }
+    
+    def run_full_lifecycle(self, end_age: int, annual_savings: float, return_rates: List[float]) -> Dict[str, Any]:
+        """
+        Run complete lifecycle: Accumulation phase followed by decumulation.
+        Resets histories before starting; returns end-of-life summary.
+        """
+        self.net_worth_history = []
+        self.tax_history = []
+        retirement_age = self.profile.retirement_age
+        
+        self.simulate_accumulation_phase(retirement_age, annual_savings, return_rates)
+        return self.simulate_end_of_life_net_worth(end_age, return_rates)
