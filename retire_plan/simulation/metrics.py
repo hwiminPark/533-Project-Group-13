@@ -19,3 +19,13 @@ def estimate_lifetime_returns(return_rates: List[float], initial_nw: float) -> f
         return 0.0
     compounded = np.prod([1 + r for r in return_rates])
     return initial_nw * (compounded - 1)
+
+def project_tax_efficiency(tax_history: List[float], total_withdrawals: float) -> float:
+    """
+    Project tax efficiency as the ratio of total taxes paid to total withdrawals
+    0 if no withdrawals.
+    """
+    total_taxes = sum(tax_history)
+    if total_withdrawals == 0:
+        return 0.0
+    return total_taxes / total_withdrawals
