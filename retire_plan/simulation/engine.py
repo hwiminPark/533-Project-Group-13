@@ -47,3 +47,50 @@ class Simulator:
             
             # Age the profile
             self.profile.update_ages(1)
+
+    def simulate_end_of_life_net_worth(self, end_age: int, return_rates: List[float]) -> Dict[str, Any]:
+        """
+        Simulate post-retirement: Apply withdrawals to meet spending target,
+        calculate taxes, apply returns, and track net worth/taxes.
+        Loops from current age to end_age - 1; returns summary dict.
+        """
+        current_age = self.profile.age
+        for year in range(end_age - current_age):
+            # Get annual withdrawals via strategy (available = spending_target)
+            withdrawals = self.withdraw_strategy.get_annual_actions(
+                year, self.profile, self.profile.spending_target
+            )
+            total_withdrawn = 0
+            for acc, amt in withdrawals.items():
+                withdrawn = acc.withdraw(amt)
+                total_withdrawn += withdrawn
+            
+            # Calculate taxes on withdrawals
+            gross = total_withdrawn
+            deductions = {'rrsp': 0}  # Placeholder; could track unused
+            taxable = self.tax_calc.calc_taxable_income(gross, deductions)
+            net_income = self.tax_calc.calc_net_income(taxable)
+            tax_paid = gross - net_income
+            self.tax_history.append(tax_paid)
+            
+            # Apply returns after withdrawals
+            for acc in self.profile.accounts:
+                acc.apply_return(return_rates[year])
+            
+            # Track net worth
+            nw = self.profile.get_total_net_worth()
+            self.net_worth_history.append(nw)
+            
+            # Age the profile
+            self.profile.update_ages(1)
+        
+        # Compute integrated metrics
+        shortfalls = calculate_shortfall_years(self.net_worth_history, self.profile.spending_target * 25)  # 25x rule target
+        tax_eff = project_tax_efficiency(self.tax_history, sum(self.net_worth_history) / len(self.net_worth_history))  # Avg NW as proxy
+        
+        return {
+            'final_nw': self.net_worth_history[-1] if self.net_worth_history else 0,
+            'total_taxes': sum(self.tax_history),
+            'shortfall_years': shortfalls,
+            'tax_efficiency': tax_eff
+        }
