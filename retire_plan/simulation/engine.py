@@ -106,3 +106,29 @@ class Simulator:
         
         self.simulate_accumulation_phase(retirement_age, annual_savings, return_rates)
         return self.simulate_end_of_life_net_worth(end_age, return_rates)
+    
+    def optimize_strategies(self, contrib_strats: List[Strategy], withdraw_strats: List[Strategy],
+                           params: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Optimize by running full lifecycles for all contrib/withdraw strategy combos.
+        Ranks results by total_taxes (lowest first); uses params like end_age, annual_savings, return_rates.
+        """
+        results = []
+        for c_strat in contrib_strats:
+            for w_strat in withdraw_strats:
+                # Create temporary simulator for each combo
+                temp_profile = PersonProfile(
+                    self.profile.age, self.profile.province, self.profile.income,
+                    self.profile.retirement_age, self.profile.spending_target
+                )
+                for acc in self.profile.accounts:
+                    temp_profile.add_account(type(acc)(acc.balance))
+                temp_sim = Simulator(temp_profile, self.tax_calc, c_strat, w_strat)
+                outcome = temp_sim.run_full_lifecycle(**params)
+                results.append({
+                    'contrib_strategy': c_strat.name,
+                    'withdraw_strategy': w_strat.name,
+                    **outcome
+                })
+        # Sort by total_taxes ascending
+        return sorted(results, key=lambda x: x['total_taxes'])
