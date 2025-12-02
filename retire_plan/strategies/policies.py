@@ -49,20 +49,17 @@ def strategy_spend_taxable_first(state: Dict[str, Any]) -> Dict[str, float]:
 
     plan = {"tax_deferred": 0.0, "tax_free": 0.0, "taxable": 0.0}
 
-    # 1. withdraw from taxable first
     taxable_avail = float(balances.get("taxable", 0.0))
     from_taxable = min(remaining, taxable_avail)
     plan["taxable"] = from_taxable
     remaining -= from_taxable
 
-    # 2. then tax-deferred (RRSP/RRIF)
     if remaining > 0:
         td_avail = float(balances.get("tax_deferred", 0.0))
         from_td = min(remaining, td_avail)
         plan["tax_deferred"] = from_td
         remaining -= from_td
 
-    # 3. finally tax-free (TFSA)
     if remaining > 0:
         tf_avail = float(balances.get("tax_free", 0.0))
         from_tf = min(remaining, tf_avail)
@@ -79,13 +76,11 @@ def strategy_spend_rrsp_first(state: Dict[str, Any]) -> Dict[str, float]:
 
     plan = {"tax_deferred": 0.0, "tax_free": 0.0, "taxable": 0.0}
 
-    # 1. withdraw from RRSP/RRIF first
     td_avail = float(balances.get("tax_deferred", 0.0))
     from_td = min(remaining, td_avail)
     plan["tax_deferred"] = from_td
     remaining -= from_td
 
-    # 2. then taxable
     if remaining > 0:
         taxable_avail = float(balances.get("taxable", 0.0))
         from_taxable = min(remaining, taxable_avail)
@@ -109,21 +104,18 @@ def strategy_smooth_with_tfsa(state: Dict[str, Any]) -> Dict[str, float]:
 
     plan = {"tax_deferred": 0.0, "tax_free": 0.0, "taxable": 0.0}
 
-    # 1. moderate RRSP withdrawal: 4% rule
     td_bal = float(balances.get("tax_deferred", 0.0))
     suggested = 0.04 * td_bal
     from_td = min(remaining, suggested, td_bal)
     plan["tax_deferred"] = from_td
     remaining -= from_td
 
-    # 2. then taxable
     if remaining > 0:
         taxable_bal = float(balances.get("taxable", 0.0))
         from_taxable = min(remaining, taxable_bal)
         plan["taxable"] = from_taxable
         remaining -= from_taxable
 
-    # 3. TFSA as flexible top-up
     if remaining > 0:
         tf_bal = float(balances.get("tax_free", 0.0))
         from_tf = min(remaining, tf_bal)
