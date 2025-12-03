@@ -24,14 +24,31 @@ class AccountBase(ABC):
     name : str
         Human-readable account name.
     balance : float
-        Current account balance.
+        Current account balance (dollars).
     annual_return : float
         Assumed annual rate of return (e.g., 0.05 for 5%).
     """
 
     name: str
-    balance: float
-    annual_return: float
+    balance: float = 0.0
+    annual_return: float = 0.0
+
+    def deposit(self, amount: float) -> None:
+        """Deposit cash into the account.
+
+        Parameters
+        ----------
+        amount : float
+            Amount of cash to add to the balance.
+
+        Raises
+        ------
+        ValueError
+            If ``amount`` is negative.
+        """
+        if amount < 0:
+            raise ValueError("Cannot deposit a negative amount.")
+        self.balance += float(amount)
 
     def grow(self) -> None:
         """Apply one year of investment growth to this account.
@@ -48,7 +65,7 @@ class AccountBase(ABC):
         Parameters
         ----------
         amount : float
-            Target amount of cash to withdraw from this account.
+            Target amount of cash to withdraw from this account (non-negative).
 
         Returns
         -------
@@ -66,13 +83,30 @@ class AccountBase(ABC):
         raise NotImplementedError("Subclasses must implement withdraw().")
 
     def _clamp_withdrawal(self, amount: float) -> float:
-        """Utility: clamp withdrawal to available balance and update balance.
+        """Utility: clamp withdrawal to [0, balance] and update balance.
 
-        Returns the actual amount withdrawn.
+        Parameters
+        ----------
+        amount : float
+            Requested withdrawal amount.
+
+        Returns
+        -------
+        actual : float
+            Actual amount withdrawn (0 if account empty or amount <= 0).
         """
-        actual = min(amount, self.balance)
+        # No negative withdrawals, and nothing if account empty
+        if amount <= 0 or self.balance <= 0:
+            return 0.0
+
+        actual = float(min(amount, self.balance))
         self.balance -= actual
         return actual
+
+    @property
+    def is_empty(self) -> bool:
+        """Whether the account has (effectively) zero balance."""
+        return self.balance <= 1e-6
 
 
 @dataclass
@@ -114,7 +148,8 @@ class TaxableAccount(AccountBase):
     - Treat withdrawals as fully taxable (very conservative).
     - Later we can refine to split principal vs. gains.
 
-    TODO:
+    TODO
+    ----
     - Implement more realistic capital gains treatment if needed.
     """
 
