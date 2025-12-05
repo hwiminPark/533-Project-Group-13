@@ -1,5 +1,5 @@
 """
-
+Simulation engine for the retire_plan package.
 """
 
 from __future__ import annotations
