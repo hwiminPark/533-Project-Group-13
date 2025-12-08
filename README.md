@@ -37,7 +37,7 @@ Documentation + tests: Rex (writes the user-facing documentation and unit tests 
 
 Simulation sub-package (retire_plan.simulation)
 
-Implementation: Huimin
+Implementation: Hwimin
 
 Documentation + tests: Sage Yang (writes the documentation and unittest-based test suite in tests/test_engine.py and tests/test_metrics.py.)
 
@@ -45,4 +45,4 @@ Strategies sub-package (retire_plan.strategies)
 
 Implementation: Rex
 
-Documentation + tests: Huimin (writes the documentation and unit tests for withdrawal strategies and analysis helpers.)
+Documentation + tests: Hwimin (writes the documentation and unit tests for withdrawal strategies and analysis helpers.)
