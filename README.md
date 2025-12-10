@@ -3,25 +3,40 @@
 ## 01 Package Structure
 
 ```text
-retire_plan/
-    __init__.py
-
-    accounts/              # Student A: account models & profile
-        __init__.py
-        models.py          # AccountBase + 3 concrete account types
-        profile.py         # PersonProfile
-
-    simulation/            # Student B: simulation engine & tax system
-        __init__.py
-        metrics.py
-        engine.py
-
-    strategies/            # Student C: withdrawal strategies & analysis
-        __init__.py
-        policies.py
-        analysis.py
-
-demo_runner.py             # Demo script entry point (placeholder for now)
+retireplan/
+├── src/
+│   └── retireplan/
+│       ├── __init__.py
+│       ├── accounts/
+│       │   ├── __init__.py
+│       │   ├── accounts.py
+│       │   ├── models.py
+│       │   └── profile.py
+│       ├── simulation/
+│       │   ├── __init__.py
+│       │   ├── engine.py
+│       │   ├── metrics.py
+│       │   └── README.md
+│       └── strategies/
+│           ├── __init__.py
+│           ├── analysis.py
+│           ├── policies.py
+│           └── strategies.md
+├── tests/
+│   ├── __init__.py
+│   ├── test_analysis.py
+│   ├── test_engine.py
+│   ├── test_metrics.py
+│   ├── test_models.py
+│   ├── test_policies.py
+│   ├── test_profile.py
+│   └── test_suite.py
+├── demo_runner.py
+├── pyproject.toml
+├── README.md
+├── LICENSE
+├── .gitignore
+└── requirements.txt
 
 ```
 
