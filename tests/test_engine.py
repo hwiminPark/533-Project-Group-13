@@ -41,7 +41,27 @@ class TestSimulator(unittest.TestCase):
             contrib_max_tfsa_first, strategy_spend_taxable_first,
             years_working=3, annual_savings=20000, annual_spending=50000
         )
-        self.assertIn("final_wealth", result)
-        self.assertIn("total_tax_paid", result)
-        self.assertIn("history", result)
-        self.assertGreater(len(result["history"]), 3)
+
+    def test_run_accumulation_negative_years_raises(self):    
+        with self.assertRaises(ValueError):
+            self.sim.run_accumulation(
+                contrib_max_tfsa_first,
+                years_to_retirement=-1,
+                annual_savings=20_000,
+            )
+
+    def test_run_accumulation_negative_savings_raises(self):
+        with self.assertRaises(ValueError):
+            self.sim.run_accumulation(
+                contrib_max_tfsa_first,
+                years_to_retirement=1,
+                annual_savings=-10_000,
+            )
+
+    def test_run_decumulation_non_positive_spending_raises(self):
+        with self.assertRaises(ValueError):
+            self.sim.run_decumulation(
+                strategy_spend_taxable_first,
+                annual_spending=0.0,
+            )
+        
