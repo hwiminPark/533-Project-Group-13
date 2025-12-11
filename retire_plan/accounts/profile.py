@@ -78,7 +78,12 @@ class PersonProfile:
         int
             max(0, end_age - current_age)
         """
-        return max(0, self.end_age - self.current_age)
+        diff = self.end_age - self.current_age
+        if diff < 0:
+            # 这里选择“防御性处理”：返回 0，而不是抛异常
+            return 0
+        return diff
+
 
     def annual_gov_benefits(self) -> float:
         """Total annual government pension income (CPP + OAS)."""
