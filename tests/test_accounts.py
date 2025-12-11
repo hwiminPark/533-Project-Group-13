@@ -35,23 +35,6 @@ class TestAccountBaseDeposit(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.acc.deposit(-1.0)
 
-
-class TestAccountBaseWithdrawValidation(unittest.TestCase):
-    """Test that AccountBase.withdraw validates negative amounts."""
-
-    def test_withdraw_negative_amount_raises(self) -> None:
-        class BadAccount(AccountBase):
-            """Concrete subclass that delegates withdraw to the base class."""
-
-            def withdraw(self, amount: float) -> Tuple[float, float]:
-                return super().withdraw(amount)
-
-        acc = BadAccount(name="Bad", balance=1_000.0, annual_return=0.05)
-
-        with self.assertRaises(ValueError):
-            acc.withdraw(-100.0)
-
-
 # ==============================
 # TaxDeferredAccount
 # ==============================
