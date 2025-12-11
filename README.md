@@ -121,7 +121,7 @@ https://pypi.org/project/retire-plan-group13/
 We use pytest and pytest-cov for testing and coverage. For this project, we ensured that the overall coverage is at least 75%, as required in the assignment.
 
 ```markdown
-![Coverage report](docs/coverage-report.png)
+![Coverage report](docs/coverage-report.jpg)
 ```
 
 ## 07 Demo video
