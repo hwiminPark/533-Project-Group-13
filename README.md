@@ -95,7 +95,7 @@ acc_td = TaxDeferredAccount(name="RRSP", balance=100_000.0, annual_return=0.05)
 acc_tf = TaxFreeAccount(name="TFSA", balance=50_000.0, annual_return=0.05)
 acc_taxable = TaxableAccount(name="Taxable", balance=20_000.0, annual_return=0.03)
 
-# 2. Define the person profile used in the simulation
+# 2. Define the person profile
 person = PersonProfile(
     name="Example",
     current_age=35,
@@ -119,7 +119,7 @@ results = sim.run_full_lifecycle(
     annual_spending=80_000,
 )
 
-# 5. Print a simple summary (run_full_lifecycle returns a dict, not an object with .summary())
+# 5. Print a simple summary
 print("Final wealth      :", results["final_wealth"])
 print("Total tax paid    :", results["total_tax_paid"])
 print("Ruin age          :", results["ruin_age"])
