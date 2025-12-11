@@ -19,6 +19,10 @@ from retire_plan.strategies.policies import (
 
 StrategyFunc = Callable[[Dict[str, Any]], Dict[str, float]]
 
+class SimulationConfigError(ValueError):
+    """User-defined exception for invalid simulator configuration."""
+    pass
+
 
 class Simulator:
     def __init__(self, profile: PersonProfile, tax_calculator: TaxCalculator | None = None):
@@ -42,9 +46,9 @@ class Simulator:
         return_rate: float = 0.07,
     ) -> None:
         if years_to_retirement < 0:
-            raise ValueError("years_to_retirement cannot be negative")
+            raise SimulationConfigError("years_to_retirement cannot be negative")
         if annual_savings < 0:
-            raise ValueError(f"annual_savings cannot be negative: {annual_savings}")
+            raise SimulationConfigError(f"annual_savings cannot be negative: {annual_savings}")
         
         age = self.profile.current_age
 
@@ -95,7 +99,7 @@ class Simulator:
     ) -> None:
         """Simulate retirement years: withdrawals + tax + growth."""
         if annual_spending <= 0:
-            raise ValueError(f"annual_spending must be positive: {annual_spending}")
+            raise SimulationConfigError(f"annual_spending must be positive: {annual_spending}")
         current_age = self.profile.current_age
         spending = annual_spending
 
