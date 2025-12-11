@@ -85,13 +85,17 @@ from retire_plan.simulation.engine import Simulator
 from retire_plan.accounts.models import TaxDeferredAccount, TaxFreeAccount, TaxableAccount
 from retire_plan.accounts.profile import PersonProfile
 from retire_plan.simulation.engine import Simulator
+from retire_plan.strategies.policies import (
+    contrib_max_tfsa_first,
+    strategy_spend_taxable_first,
+)
 
-# Define three account types
+# 1. Define three investment accounts
 acc_td = TaxDeferredAccount(name="RRSP", balance=100_000.0, annual_return=0.05)
 acc_tf = TaxFreeAccount(name="TFSA", balance=50_000.0, annual_return=0.05)
 acc_taxable = TaxableAccount(name="Taxable", balance=20_000.0, annual_return=0.03)
 
-# Build a person profile
+# 2. Define the person profile used in the simulation
 person = PersonProfile(
     name="Example",
     current_age=35,
@@ -103,11 +107,25 @@ person = PersonProfile(
     oas_annual=8_000.0,
 )
 
-# Run a simple simulation with a chosen withdrawal strategy
-sim = Simulator(person=person, strategy_name="taxable_first")
-results = sim.run_full_lifecycle()
+# 3. Create the simulator with this profile
+sim = Simulator(profile=person)
 
-print(results.summary())
+# 4. Choose a contribution + withdrawal strategy combination and run the full lifecycle
+results = sim.run_full_lifecycle(
+    contribution_strategy=contrib_max_tfsa_first,
+    withdrawal_strategy=strategy_spend_taxable_first,
+    years_working=35,
+    annual_savings=28_000,
+    annual_spending=80_000,
+)
+
+# 5. Print a simple summary (run_full_lifecycle returns a dict, not an object with .summary())
+print("Final wealth      :", results["final_wealth"])
+print("Total tax paid    :", results["total_tax_paid"])
+print("Ruin age          :", results["ruin_age"])
+print("Success (no ruin) :", results["success"])
+print("Peak wealth       :", results["peak_wealth"])
+
 ```
 
 ## 05 PyPI package link
