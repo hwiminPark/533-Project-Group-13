@@ -116,7 +116,7 @@ The package is available on PyPI at:
 
 https://pypi.org/project/retire-plan-group13/
 
-## 05 Running tests and coverage locally
+## 06 Running tests and coverage locally
 
 We use pytest and pytest-cov for testing and coverage. For this project, we ensured that the overall coverage is at least 75%, as required in the assignment.
 
@@ -124,7 +124,7 @@ We use pytest and pytest-cov for testing and coverage. For this project, we ensu
 ![Coverage report](docs/coverage-report.png)
 ```
 
-## 06 Demo video
+## 07 Demo video
 
 A short demo video showing how to install and use the package,
 the CI workflow, and the tests/coverage is included in this repository:
