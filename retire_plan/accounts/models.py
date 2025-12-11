@@ -46,8 +46,11 @@ class AccountBase(ABC):
         ValueError
             If ``amount`` is negative.
         """
+        class NegativeAmountError(ValueError):
+            pass
+
         if amount < 0:
-            raise ValueError("Cannot deposit a negative amount.")
+            raise NegativeAmountError
         self.balance += float(amount)
 
     def grow(self) -> None:
