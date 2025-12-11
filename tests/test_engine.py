@@ -42,26 +42,29 @@ class TestSimulator(unittest.TestCase):
             years_working=3, annual_savings=20000, annual_spending=50000
         )
 
-    def test_run_accumulation_negative_years_raises(self):    
+    def test_run_accumulation_negative_years_raises(self):
         with self.assertRaises(ValueError):
             self.sim.run_accumulation(
                 contrib_max_tfsa_first,
-                years_to_retirement=-1,
+                years_to_retirement=-1,   # 注意：负数才触发
                 annual_savings=20_000,
             )
 
     def test_run_accumulation_negative_savings_raises(self):
+        """annual_savings < 0 应该报错。"""
         with self.assertRaises(ValueError):
             self.sim.run_accumulation(
                 contrib_max_tfsa_first,
                 years_to_retirement=1,
-                annual_savings=-10_000,
+                annual_savings=-10_000,   # 负数才触发
             )
 
     def test_run_decumulation_non_positive_spending_raises(self):
+        """annual_spending <= 0 应该报错。"""
         with self.assertRaises(ValueError):
             self.sim.run_decumulation(
                 strategy_spend_taxable_first,
-                annual_spending=0.0,
+                annual_spending=0.0,      # 这里 0 或负数都行
             )
+
         
