@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "retire-plan-group13"          
+version = "0.1.0"
+description = "Retirement planning tools for Canadian accounts (DATA 533 Group 13)"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "DATA 533 Group 13" }
+]
+license = { text = "MIT" }            
+dependencies = []                     
+[project.urls]
+Homepage = "https://github.com/hwiminPark/533-Project-Group-13.git"  # ② 改成你们仓库地址
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["retire_plan*"]

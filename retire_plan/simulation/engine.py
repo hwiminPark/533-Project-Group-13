@@ -41,6 +41,11 @@ class Simulator:
         annual_savings: float = 30_000,
         return_rate: float = 0.07,
     ) -> None:
+        if years_to_retirement < 0:
+            raise ValueError("years_to_retirement cannot be negative")
+        if annual_savings < 0:
+            raise ValueError(f"annual_savings cannot be negative: {annual_savings}")
+        
         age = self.profile.current_age
 
         for year in range(years_to_retirement):
@@ -88,6 +93,9 @@ class Simulator:
         inflation_rate: float = 0.02,
         return_rate: float = 0.05,
     ) -> None:
+        """Simulate retirement years: withdrawals + tax + growth."""
+        if annual_spending <= 0:
+            raise ValueError(f"annual_spending must be positive: {annual_spending}")
         current_age = self.profile.current_age
         spending = annual_spending
 
